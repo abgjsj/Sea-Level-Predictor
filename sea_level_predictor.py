@@ -1,32 +1,29 @@
-import pandas as pd
 import matplotlib.pyplot as plt
+import pandas as pd
 from scipy.stats import linregress
 
+
 def draw_plot():
-    # Read data from file
     df = pd.read_csv("epa-sea-level.csv")
 
-    # Create scatter plot
-    fig, ax = plt.subplots(figsize=(8,5))
-    scatter = plt.scatter(df["Year"], df["CSIRO Adjusted Sea Level"])
+    fig, ax = plt.subplots(figsize=(12, 6))
 
-    # Create first line of best fit
-    # Includes the whole data range
-    line_fit = linregress(df["Year"], df["CSIRO Adjusted Sea Level"])
+    ax.scatter(df["Year"], df["CSIRO Adjusted Sea Level"], color="blue", label="Original Data")
 
-    # Create second line of best fit
-    # Fitting from year 2000 to most recent
-    mask = df["Year"] >= 2000
-    line_fit_recent = linregress(df[mask]["Year"], df[mask]["CSIRO Adjusted Sea Level"])
+    res = linregress(df["Year"], df["CSIRO Adjusted Sea Level"])
+    x_pred = pd.Series([i for i in range(df["Year"].min(), 2050 + 1)])
+    y_pred = res.slope * x_pred + res.intercept
+    ax.plot(x_pred, y_pred, color="red", label="Fit Line 1880-2050")
 
-    # Add labels and title
-    plt.plot(range(1880, 2051, 1), line_fit.slope*range(1880, 2051, 1)+line_fit.intercept, color="red")
-    plt.plot(range(2000, 2051, 1), line_fit_recent.slope*range(2000, 2051, 1)+line_fit_recent.intercept, color='green')
-    plt.xlabel("Year")
-    plt.ylabel("Sea Level (inches)")
-    plt.title("Rise in Sea Level")
+    df_recent = df[df["Year"] >= 2000]
+    res_recent = linregress(df_recent["Year"], df_recent["CSIRO Adjusted Sea Level"])
+    x_pred_recent = pd.Series([i for i in range(2000, 2050 + 1)])
+    y_pred_recent = res_recent.slope * x_pred_recent + res_recent.intercept
+    ax.plot(x_pred_recent, y_pred_recent, color="green", label="Fit Line 2000-2050")
 
-    
-    # Save plot and return data for testing (DO NOT MODIFY)
-    plt.savefig('sea_level_plot.png')
-    return plt.gca()
+    ax.set_xlabel("Year")
+    ax.set_ylabel("Sea Level (inches)")
+    ax.set_title("Rise in Sea Level")
+
+    fig.savefig("sea_level_plot.png")
+    return fig
